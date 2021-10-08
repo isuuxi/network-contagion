@@ -1,37 +1,49 @@
 import random
 import numpy as np
 
-def get_inf_pressure(A, current_infected_nodes, infprob):
-    '''
-    Calculates the infection pressure of each node
-        Parameters:
-            A: matrix that represents a network
-            current_infected_nodes (list): infection status of all nodes; has one infected node after initialization
-            infprob_nodes (list): infection probabilities of all nodes in network A
+class ContagionProcess:
+    def __init__(self, A, infprob_indiv, method, infected):
+        self.A = A
+        self.infprob_indiv = infprob_indiv 
+        self.method = method
+        self.inf_prob = np.zeros(len(A))
+        self.infected = infected
+        self.history = np.empty(len(self.infected))
+        self.history[:] = np.NaN
+        self.current_step = 0
 
-        Returns:
-            inf_pressure (list): infection pressure of all nodes in network A
-    '''
-    inf_pressure = np.zeros(len(A))
-    for i, n in enumerate(A):
-        sum = 0
-        for x in A.neighbors(i):
-           if current_infected_nodes[x] ==1:
-               sum += 1
-        if sum == 1:
-            inf_pressure[i] = infprob[i]
-        elif sum == 0:
-            inf_pressure[i] = 0
+    def step(self):
+        if self.method == "SI_cont":
+            sum_inf_neighbors = np.squeeze(np.asarray(self._get_sum_inf_neighbors(self.A, self.infected)))
+            for i in range(len(self.A)):
+                self.inf_prob[i] = 1 - np.power((1-self.infprob_indiv[i]), sum_inf_neighbors[i])
+        elif self.method == "threshold_cont":
+            pass
+        elif self.method == "fractional_cont":
+            pass
+        elif self.method == "generalized_cont":
+            pass
         else:
-            inf_pressure[i] = infprob[i] + (sum/len((list(A.neighbors(i)))))*infprob[i]
-    return inf_pressure
+            print("not a valid contagion method")
+        decision = self._mc_result(self.inf_prob)
+        self._update_infections(decision)
+        self.current_step += 1
+        return None
 
-def get_infprob(A):
-    infprob = np.random.uniform(0, 0.4, len(A))
-    return infprob
+    def _get_sum_inf_neighbors(self, A, infected):         
+        return np.dot(A, infected)
 
-def mc_result(inf_pressure):
-    c = np.random.uniform(0, 1, size = inf_pressure.shape)
-    return c < inf_pressure, c
-    
+    def _mc_result(self, inf_prob):
+        c = np.random.uniform(0, 1, size = inf_prob.shape)
+        return c < inf_prob 
+
+    def _update_infections(self, decision): 
+        for j in np.where(decision == 1)[0]:
+            if self.infected[j] == 0:
+                self.infected[j] = decision[j]
+                self.history[j] = self.current_step     
+        
+def get_infprob_indiv(A):
+    infprob_indiv = np.random.uniform(0, 0.4, len(A))
+    return infprob_indiv
 

@@ -1,11 +1,8 @@
-import matplotlib.pyplot as plt
 import networkx as nx
 import random
 import numpy as np
 
-from utils import get_infprob
-from utils import get_inf_pressure  
-from utils import mc_result 
+from utils import get_infprob_indiv
 
 def create_network(n, p):
     '''
@@ -15,61 +12,26 @@ def create_network(n, p):
             p: probability for edge creation
 
         Returns:
-            A: Matrix that represents a network
+            A: nx.graph class that represents a network
     '''
     A = nx.generators.erdos_renyi_graph(n, p)
-    #A = np.array(nx.adjacency_matrix(GA).todense())
     return A
-
-#for node in G.nodes:
-#   G.nodes[node]['infected'] = False
-
+    
 def init_network(A):
     '''
     Constructs the attributes of the network 
         Parameter:
-            A: matrix that represents a network
+            A: nx.graph class that represents a network
 
         Returns:  
-            A: matrix that represents a network
-            current_infected_nodes (list): currently infected nodes; has one infected node after initialization
-            infprob_nodes (list): infection probabilities of all nodes in network A
+            A: adjacency matrix as pandas dataframe 
+            infected (dataframe): currently infected nodes; has one infected node after initialization
+            infprob_indiv_nodes (list): infection probabilities of all nodes in network A
     '''
-    N = len(A)
-    current_infected_nodes = np.zeros(N)
+    network_adj = nx.to_numpy_matrix(A)
+    N = len(network_adj)
+    infected = np.zeros(len(network_adj))
     first_infection = random.randint(0, N-1)
-    current_infected_nodes[first_infection]=1
-    infprob_nodes = get_infprob(A)
-    return A, current_infected_nodes, infprob_nodes
-
-def time_step(A, current_infected_nodes, infprob_nodes, t):
-    '''
-    Executes t time steps in the infection model
-        Parameters:
-            A: matrix that represents a network
-            current_infected_nodes (list): currently infected nodes; has one infected node after initialization
-            infprob_nodes (list): infection probabilities of all nodes in network A
-            t: number of time steps
-
-        Returns:
-            time_series: time series of the number of infected nodes in all time steps
-    '''
-    time = np.arange(t)
-    time_series = np.zeros(t)
-    I = np.sum(current_infected_nodes)  
-    for t in range(t):
-        time_series[t] = I
-        I = np.sum(current_infected_nodes)  
-        inf_pressure = get_inf_pressure(A, current_infected_nodes, infprob_nodes)
-        decision, c = mc_result(inf_pressure)
-        #print("Decision in {} is {}".format(t, decision))
-        for j in np.where(decision == 1)[0]:
-            if current_infected_nodes[j] == 0:
-                current_infected_nodes[j] = decision[j]
-        I = np.sum(current_infected_nodes)  
-        time_series[t] = I
-    return time_series
-
-
-
-
+    infected[first_infection] = True
+    infprob_indiv_nodes = get_infprob_indiv(network_adj)
+    return network_adj, infected, infprob_indiv_nodes

@@ -1,40 +1,29 @@
 import SI_model
 import numpy as np
+import networkx as nx
+import utils
 
-from utils import get_inf_pressure
-from utils import mc_result
+def run_model(t, n, p):
+    '''
+    Wrapper for time_step to execute t time steps of the infection process
+        Parameters:
+            n: number of nodes
+            p: probability for edge creation
+            t: number of time steps
 
+        Returns:
+            time_series: time series of the number of infected nodes in all time steps
+            history: time step of infection for each node
+    '''
+    G = SI_model.create_network(n, p)
+    A, infected, infprob_indiv_nodes = SI_model.init_network(G)
+    time = np.arange(t)
+    time_series = np.zeros(t) 
+    process = utils.ContagionProcess(A, infprob_indiv_nodes, "SI_cont", infected)
+    for t in range(t):
+        process.step()
+        time_series[t] = np.sum(process.infected)
+    return time_series, process.history
 
-A = SI_model.create_network(5000, 0.009)
-A, current_infected_nodes, infprob_nodes = SI_model.init_network(A)
-#print("Current infected nodes are {} ".format(current_infected_nodes))
-#print(infprob_nodes)
-#print(list(G.nodes))
-#print(list(G.edges))
-
-time_series = SI_model.time_step(A, current_infected_nodes, infprob_nodes, 30)
-print("Time series of infections is {} ".format(time_series))
-#print(len(time_series))
-
-
-
-#inf_p = get_inf_pressure(A, current_infected_nodes, infprob_nodes)
-
-#decision, c = mc_result(inf_p)
-
-#print ("Infection pressure is {} ".format(inf_p))
-#print("Infection decision list for all nodes is {}".format(decision))
-
-#print("Criterion is {}".format(c))
-
-#print(np.where(current_infected_nodes ==1))
-
-#def inf_index(list):
- #   for i, j in enumerate(list):
- #      if j ==1:
- #           index = i
- #  return index
-
-#index = inf_index(current_infected_nodes)
-#print("Index of first infection is {}".format(index))
-#print("Neighbors of infected node are {}".format([n for n in A[index]]))
+time_series, history = run_model(20, 500, 0.01)
+print (f"Infections are {time_series} and the history is {history}")
