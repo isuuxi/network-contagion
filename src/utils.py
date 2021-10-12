@@ -13,6 +13,9 @@ class ContagionProcess:
         self.current_step = 0
 
     def step(self):
+        '''
+        Executes one time step of a contagion process 
+        '''
         if self.method == "SI_cont":
             sum_inf_neighbors = np.squeeze(np.asarray(self._get_sum_inf_neighbors(self.A, self.infected)))
             for i in range(len(self.A)):
@@ -44,6 +47,13 @@ class ContagionProcess:
                 self.history[j] = self.current_step     
         
 def get_infprob_indiv(A):
+    '''
+    returns the individual infection probability of each node
+       Parameters: 
+           A: adjacency matrix of a network
+       Returns:
+           infprob_indiv: numpy array with randomly chosen infection probabilities of nodes
+    '''
     infprob_indiv = np.random.uniform(0, 0.4, len(A))
     return infprob_indiv
 
