@@ -4,6 +4,7 @@ import networkx as nx
 import utils
 import time 
 import csv
+import math
 
 def run_model(t, n, p):
     '''
@@ -19,18 +20,19 @@ def run_model(t, n, p):
     '''
     start_time = time.time()
     G = SI_model.create_network(n, p)
-    A, infected, infprob_indiv_nodes = SI_model.init_network(G)
+    A, infected, infprob_indiv_nodes, dose_threshold = SI_model.init_network(G)
     time_series = np.zeros(t) 
-    process = utils.ContagionProcess(A, infprob_indiv_nodes, "SI_cont", infected)
+    process = utils.ContagionProcess(A, "generalized_cont", infected, method_params = {'infprob_indiv': infprob_indiv_nodes, 'dose_threshold': dose_threshold})
     for t in range(t):
         process.step()
         time_series[t] = np.sum(process.infected)
     runtime = (time.time() - start_time)
-    print("--- %s temporal inner seconds ---" % runtime)
-    return time_series, process.history, runtime
+    print(f"--- contagion method is {process.method} ---")
+    print(f"--- runtime is {runtime:.4f} seconds ---")
+    return time_series, process.history, runtime 
 
-parameters = [20, 1000, 0.004]
-print(parameters)
+parameters = [20, 400, 0.04]
+#print(parameters)
 time_series, history, runtime = run_model(parameters[0], parameters[1], parameters[2])
 print (f"Infections are {time_series} ")
 #and the history is {history}")

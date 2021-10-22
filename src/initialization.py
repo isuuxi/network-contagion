@@ -2,7 +2,7 @@ import networkx as nx
 import random
 import numpy as np
 
-from utils import get_infprob_indiv
+from utils import get_dose_threshold, get_infprob_indiv
 
 def create_network(n, p):
     '''
@@ -34,4 +34,5 @@ def init_network(A):
     first_infection = random.randint(0, N-1)
     infected[first_infection] = True
     infprob_indiv_nodes = get_infprob_indiv(network_adj)
-    return network_adj, infected, infprob_indiv_nodes
+    dose_threshold = get_dose_threshold(network_adj)
+    return network_adj, infected, infprob_indiv_nodes, dose_threshold
