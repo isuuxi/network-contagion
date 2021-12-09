@@ -42,7 +42,6 @@ class ContagionProcess:
 
             sum_inf_neighbors = np.squeeze(np.asarray(self._get_sum_inf_neighbors(self.A, self.infected))).astype(int)
             #print(f"sum_inf_neighbors is {sum__neighbors}")
-            
             sum_neighbors = self._get_sum_neighbors(self.A)
             rand_neighbor = random.randint(1, sum_inf_neighbors) 
             print(f"random neighbor is {rand_neighbor}")
