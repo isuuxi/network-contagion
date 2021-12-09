@@ -39,9 +39,10 @@ class ContagionProcess:
         elif self.method == "generalized_cont":
             N = get_normalized_weights(self.A) # implement this somewhere else or it will be calculated in every step
             
+
             sum_inf_neighbors = np.squeeze(np.asarray(self._get_sum_inf_neighbors(self.A, self.infected))).astype(int)
             #print(f"sum_inf_neighbors is {sum__neighbors}")
-            #rand_vec = np.vectorize(random.randint)
+            
             sum_neighbors = self._get_sum_neighbors(self.A)
             rand_neighbor = random.randint(1, sum_inf_neighbors) 
             print(f"random neighbor is {rand_neighbor}")
