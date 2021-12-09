@@ -24,9 +24,10 @@ def run_model(t, n, p):
     '''
     start_time = time.time()
     G = initialization.create_network(n, p)
-    A, infected, infprob_indiv_nodes, dose_threshold = initialization.init_network(G)
+    A, infected, infprob_indiv_nodes, dose_threshold, nodes_neighbors, N = initialization.init_network(G)
+    print(A)
     time_series = np.zeros(t) 
-    process = model.ContagionProcess(A, "generalized_cont", infected, method_params = {'infprob_indiv': infprob_indiv_nodes, 'dose_threshold': dose_threshold})
+    process = model.ContagionProcess(A, "generalized_cont", infected, nodes_neighbors, N, method_params = {'infprob_indiv': infprob_indiv_nodes, 'dose_threshold': dose_threshold}, noise_level = 0.01, dose_level = 0.5)
     for t in range(t):
         process.step()
         time_series[t] = np.sum(process.infected)
@@ -35,7 +36,7 @@ def run_model(t, n, p):
     print(f"--- runtime is {runtime:.4f} seconds ---")
     return time_series, process.history, runtime 
 
-parameters = [20, 500, 0.01]
+parameters = [20, 500, 0.05]
 #print(parameters)
 time_series, history, runtime = run_model(parameters[0], parameters[1], parameters[2])
 results_dict = {"Infection time series": time_series.tolist(), "Infection node history": history.tolist(), "Runtime": runtime}

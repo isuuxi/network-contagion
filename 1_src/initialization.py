@@ -15,6 +15,8 @@ def create_network(n, p):
             A: nx.graph class that represents a network
     '''
     A = nx.generators.erdos_renyi_graph(n, p)
+    for (u, v) in A.edges():
+        A.edges[u,v]['weight'] = random.random()
     return A
     
 def init_network(A):
@@ -35,4 +37,8 @@ def init_network(A):
     infected[first_infection] = True
     infprob_indiv_nodes = get_infprob_indiv(network_adj)
     dose_threshold = get_dose_threshold(network_adj)
-    return network_adj, infected, infprob_indiv_nodes, dose_threshold
+    nodes_neighbors = [None]*(len(A))
+    for i in range(len(A)):
+        nodes_neighbors[i] = (np.nonzero(A[i])[1])
+    N = get_normalized_weights(self.A) # implement this somewhere else or it will be calculated in every step
+    return network_adj, infected, infprob_indiv_nodes, dose_threshold, nodes_neighbors, N

@@ -3,13 +3,15 @@ import numpy as np
 from sklearn.preprocessing import normalize
 
 class ContagionProcess:
-    def __init__(self, A, method, infected, method_params, noise_level, dose_level):
+    def __init__(self, A, method, infected, nodes_neighbors, N, method_params, noise_level, dose_level):
         self.A = A
         self.method = method
         self.method_params = method_params
         self.dose_level = dose_level
         self.inf_prob = np.zeros(len(A))
         self.infected = infected
+        self.nodes_neighbors = nodes_neighbors
+        self.N = N
         self.noise_level = noise_level
         self.history = np.empty(len(self.infected))
         self.history[:] = np.NaN
@@ -36,16 +38,15 @@ class ContagionProcess:
             pass
         elif self.method == "fractional_cont":
             pass
-        elif self.method == "generalized_cont":
-            N = get_normalized_weights(self.A) # implement this somewhere else or it will be calculated in every step
-            
-
+        elif self.method == "generalized_cont":            
             sum_inf_neighbors = np.squeeze(np.asarray(self._get_sum_inf_neighbors(self.A, self.infected))).astype(int)
             #print(f"sum_inf_neighbors is {sum__neighbors}")
-            sum_neighbors = self._get_sum_neighbors(self.A)
-            rand_neighbor = random.randint(1, sum_inf_neighbors) 
-            print(f"random neighbor is {rand_neighbor}")
-            self.dose = self.dose_level*N[rand_neighbor]*self.infected[rand_neighbor]
+
+            #sum_neighbors = self._get_sum_neighbors(self.A)
+            #rand_neighbor = random.randint(1, sum_inf_neighbors) 
+            #print(f"random neighbor is {rand_neighbor}")
+            rand_neighbor = random.choice(self.nodes_neighbors[1])
+            self.dose = self.dose_level*self.N[rand_neighbor]
             self.memory = self.memory + self.dose 
             self.memory_storage.append(self.dose)
             if len(self.memory_storage) > self.max_memory:
