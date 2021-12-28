@@ -4,6 +4,7 @@ import numpy as np
 from sklearn.preprocessing import normalize
 
 from model import  get_infprob_indiv
+from parameters import max_dose_threshold
 
 def create_network(n, p):
     '''
@@ -50,6 +51,8 @@ def init_network(network_adj):
     for i in range(len(network_adj)):
         #print(np.nonzero(network_adj[i]))    
         nodes_neighbors[i] = np.nonzero(network_adj[i])[1]
+    #print(f"Dose threshold is {dose_threshold} with dimension {dose_threshold.ndim}")
+    print(f"Normalized network is {normalized_network}")
     return network_adj, normalized_network, infected, infprob_indiv_nodes, dose_threshold, nodes_neighbors
 
 
@@ -73,5 +76,5 @@ def get_dose_threshold(A):
        Returns:
            dose_threshold: numpy array with randomly chosen dose threshold of nodes
     '''
-    dose_threshold = np.random.uniform(0, 0.5, len(A))
+    dose_threshold = np.random.uniform(0, max_dose_threshold, len(A))
     return dose_threshold

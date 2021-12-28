@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 import os
 import math
+from parameters import *
 
 ###############################################################################
 ### Matplotlib Settings
@@ -30,22 +31,26 @@ saving_path = os.path.join(current_path, '3_plots')
 if not os.path.exists(saving_path):
         os.makedirs(saving_path)
 
-
-with open(cwd + '/2_results/results_20_500_0.1.json') as f:
+with open(cwd + f'/2_results/results_{method}_{t}_{n}_{p}_noiselevel{noise_level}.json') as f:
   data = json.load(f)
 
 print(f'Data is {data}')
 
 time_series = data['Infection time series'] 
 print(f'The time series {time_series}')
-x = np.arange(0, 20)
+x = np.arange(0, t)
 
 fig_results, ax = plt.subplots()
 ax.plot(x, time_series, label='time_series') 
+plt.suptitle(f'Time series of {method}')
+plt.xlabel('time step')
+plt.ylabel('number of infections')
+ax.text(310, 15, f'size: {n}, edge probability: {p}, threshold: {max_dose_threshold}',
+        bbox={'facecolor': 'white', 'alpha': 0.5, 'pad': 10})
 plt.show()
 
 fig_results.savefig(
-        os.path.join(saving_path, 'time_series_20_500_0.1.png'),
+        os.path.join(saving_path, f'{method}_time{t}_size{n}_prob{p}_noiselevel{noise_level}_thresh{max_dose_threshold}.png'),
         dpi=dpi,
         bbox_inches='tight'
 )
