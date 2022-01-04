@@ -3,21 +3,23 @@
 ###############################################################################
 
 #time steps
-t = 1000
+t = 100
 
 #network size
-n = 500
+n = 100
 
 #probability of node creation
-p = 0.01
+p = 0.1
 
 #noise level
-noise_level = 0.000001
+noise_level = 0
 
 #maximum dose threshold
-max_dose_threshold = 100
+max_dose_threshold = 0.5
 
 #infection type
 #possible values: "SI_cont", "generalized_cont"
-method = "SI_cont"
+method = "generalized_cont"
 
+#dose_level
+dose_level = 0.1

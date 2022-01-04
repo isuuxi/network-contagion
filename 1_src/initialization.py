@@ -52,7 +52,6 @@ def init_network(network_adj):
         #print(np.nonzero(network_adj[i]))    
         nodes_neighbors[i] = np.nonzero(network_adj[i])[1]
     #print(f"Dose threshold is {dose_threshold} with dimension {dose_threshold.ndim}")
-    print(f"Normalized network is {normalized_network}")
     return network_adj, normalized_network, infected, infprob_indiv_nodes, dose_threshold, nodes_neighbors
 
 

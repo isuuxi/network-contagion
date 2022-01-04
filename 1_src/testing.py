@@ -26,16 +26,17 @@ def run_model(t, n, p, noise_level):
     start_time = time.time()
     G = initialization.create_network(n, p)
     network_adj, normalized_network, infected, infprob_indiv_nodes, dose_threshold, nodes_neighbors = initialization.init_network(G)
-    #print(f"Not connected nodes are {not_connected}")
     time_series = np.zeros(t) 
     #noise_level = 0.0001
-    process = model.ContagionProcess(network_adj, method, infected, nodes_neighbors, normalized_network, method_params = {'infprob_indiv': infprob_indiv_nodes, 'dose_threshold': dose_threshold}, noise_level = noise_level, dose_level = 0.1)
+    process = model.ContagionProcess(network_adj, method, infected, nodes_neighbors, normalized_network, method_params = {'infprob_indiv': infprob_indiv_nodes, 'dose_threshold': dose_threshold}, noise_level = noise_level, dose_level = dose_level)
     for t in range(t):
         process.step()
         time_series[t] = np.sum(process.infected)
     runtime = (time.time() - start_time)
     print(f"--- contagion method is {process.method} ---")
     print(f"--- runtime is {runtime:.4f} seconds ---")
+    print(f"Normalized network is {normalized_network}")
+    print(f"infected node is {infected}")
     #print(f"Dose threshold is {dose_threshold} with dimension {dose_threshold.ndim}")
     return time_series, process.history, runtime 
 
