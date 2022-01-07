@@ -1,3 +1,4 @@
+from networkx.algorithms.shortest_paths import unweighted
 import initialization
 import numpy as np
 import networkx as nx
@@ -24,19 +25,20 @@ def run_model(t, n, p, noise_level):
             history: time step of infection for each node
     '''
     start_time = time.time()
-    G = initialization.create_network(n, p)
+    G, unweighted = initialization.create_network(n, p)
     network_adj, normalized_network, infected, infprob_indiv_nodes, dose_threshold, nodes_neighbors = initialization.init_network(G)
     time_series = np.zeros(t) 
     #noise_level = 0.0001
-    process = model.ContagionProcess(network_adj, method, infected, nodes_neighbors, normalized_network, method_params = {'infprob_indiv': infprob_indiv_nodes, 'dose_threshold': dose_threshold}, noise_level = noise_level, dose_level = dose_level)
+    process = model.ContagionProcess(network_adj, unweighted, method, infected, nodes_neighbors, normalized_network, method_params = {'infprob_indiv': infprob_indiv_nodes, 'dose_threshold': dose_threshold}, noise_level = noise_level, dose_level = dose_level)
     for t in range(t):
         process.step()
         time_series[t] = np.sum(process.infected)
     runtime = (time.time() - start_time)
     print(f"--- contagion method is {process.method} ---")
     print(f"--- runtime is {runtime:.4f} seconds ---")
-    print(f"Normalized network is {normalized_network}")
-    print(f"infected node is {infected}")
+    print(f"inf_prob_indiv is {infprob_indiv_nodes}")
+    #print(f"Normalized network is {normalized_network}")
+    #print(f"infected node is {infected}")
     #print(f"Dose threshold is {dose_threshold} with dimension {dose_threshold.ndim}")
     return time_series, process.history, runtime 
 
@@ -53,7 +55,7 @@ cwd = os.getcwd()
 current_path = Path.cwd()
 
 # path for json files
-results_path = os.path.join(current_path, '2_results')
+results_path = os.path.join(current_path.parent, f'2_results/{method}')
 if not os.path.exists(results_path):
         os.makedirs(results_path)
 
@@ -61,7 +63,7 @@ if not os.path.exists(results_path):
 with open(
         os.path.join(
             results_path,
-            f'results_{method}_{parameters[0]}_{parameters[1]}_{parameters[2]}_noiselevel{parameters[3]}.json'
+            f'results_{method}_t{t}_n{n}_p{p}_noise{noise_level}.json'
         ), 'w') as json_file: 
         json.dump(results_dict, json_file)
 
