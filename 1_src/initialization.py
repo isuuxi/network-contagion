@@ -39,7 +39,7 @@ def init_network(network_adj):
             infprob_indiv_nodes (list): infection probabilities of all nodes in network A
     '''
     size = len(network_adj)
-    print(f"length of A is {size}")
+    #print(f"length of A is {size}")
     normalized_network = get_normalized_weights(network_adj) 
     #connected_normalized_nodes =  normalized_network[~np.all(normalized_network == 0, axis=1)]
     infected = np.zeros(size)
@@ -88,5 +88,5 @@ def get_infprob_indiv(A):
            infprob_indiv: numpy array with randomly chosen infection probabilities of nodes
     '''
     infprob_indiv = np.random.uniform(0, max_infprob_indiv, len(A))
-    print(f"infprob_indiv in method is {infprob_indiv}")
+    #print(f"infprob_indiv in method is {infprob_indiv}")
     return infprob_indiv

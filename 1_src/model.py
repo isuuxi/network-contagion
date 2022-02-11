@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.preprocessing import normalize
 
 class ContagionProcess:
-    def __init__(self, A, unweighted, method, infected, nodes_neighbors, normalized_network, method_params, noise_level, dose_level):
+    def __init__(self, A, unweighted, method, infected, nodes_neighbors, normalized_network, method_params, noise_level, dose_level, memory_length):
         if np.sum(np.all(A == 0, axis = 1)) == 0:
             self.A = A
         else:
@@ -17,6 +17,7 @@ class ContagionProcess:
         self.nodes_neighbors = nodes_neighbors
         self.normalized_network = normalized_network
         self.noise_level = noise_level
+        #print(f"noise_level is {self.noise_level}")
         self.history = np.empty(len(self.infected))
         self.history[:] = np.NaN
         self.current_step = 0
@@ -24,18 +25,21 @@ class ContagionProcess:
         #print(f"in beginning memory has dimension {self.memory.ndim}")
         #self.memory[:] = np.NaN
         self.memory_storage = [] #this should not be a list! better numpy object
-        self.max_memory = 1000
+        self.memory_length = memory_length
         self.dose = np.empty(len(self.infected))
         self.decision = np.zeros(len(self.A))
         #print(f"in beginning decision has dimension {self.decision.ndim}")
         self._get_dose_sum = np.vectorize(self._unvectorized_get_dose_sum)
+        self.noise_inf = 0
+        self.contagion_inf = 0
 
 
     def step(self):
         '''
         Executes one time step of a contagion process 
         '''
-        self._update_infections(self.noise_process(self.A, self.noise_level + self.current_step/100000))
+        if self.noise_level > 0:
+            self._update_noise_infections(self.noise_process(self.A, self.noise_level)) #+self.current_step/100000))
         if self.method == "SI_cont":
             sum_inf_neighbors = self._get_sum_inf_neighbors(self.unweighted, self.infected)
             #print(f"sum of infected neighbors in step{self.current_step} is {sum_inf_neighbors}")
@@ -47,20 +51,20 @@ class ContagionProcess:
             pass
         elif self.method == "generalized_cont":            
             rand_neighbor = np.squeeze(np.array((self.normalized_network.cumsum(1) > np.random.rand(self.normalized_network.shape[0])[:,None]).argmax(1).T))
-            print(f"rand_neighbor in step {self.current_step} is {rand_neighbor} with dimension {rand_neighbor.ndim}")
+            #print(f"rand_neighbor in step {self.current_step} is {rand_neighbor} with dimension {rand_neighbor.ndim}")
             self.dose = self.infected[rand_neighbor]*self.dose_level 
             #self.dose = self._get_rand_neighbor_weight(rand_neighbor)*self.infected[rand_neighbor]*self.dose_level 
             #print(f"dose in step {self.current_step} is {self.dose} with dimension {self.dose.ndim}")
             self.memory = self.memory + self.dose 
             self.memory_storage.append(self.dose)
-            print(f"memory in step {self.current_step} is {self.memory}")
-            print(f"dose threshold is {self.method_params['dose_threshold']}")
-            if len(self.memory_storage) > self.max_memory:
+            #print(f"memory in step {self.current_step} is {self.memory}")
+            #print(f"dose threshold is {self.method_params['dose_threshold']}")
+            if len(self.memory_storage) > self.memory_length:
                 self.memory = self.memory - self.memory_storage[0]
                 self.memory_storage.pop(0)
             #self.decision = 0.5 <  self.memory 
             self.decision = self.method_params['dose_threshold'] <  self.memory 
-            print(f"decision is {self.decision} in step {self.current_step}")
+            #print(f"decision is {self.decision} in step {self.current_step}")
             #print(f"infected is {self.infected} in step {self.current_step}")
         else:
             print("not a valid contagion method")
@@ -69,12 +73,8 @@ class ContagionProcess:
         return None
 
     def _get_sum_inf_neighbors(self, A_unweighted, infected):  
-        #print(f"unweighted is {A_unweighted}")
-        #print(f"infected is {infected}")
         sum_inf_neighbors = np.dot(A_unweighted, infected)   
-        #print(f"sun_inf_neighbors before is {sum_inf_neighbors}")    
         return np.squeeze(np.asarray(sum_inf_neighbors))
-        #return(sum_inf_neighbors)
 
     def _get_sum_neighbors(self, A):
         sum_neighbors = np.sum(A, axis = 1)
@@ -82,8 +82,21 @@ class ContagionProcess:
 
     def _mc_result(self, inf_prob):
         c = np.random.uniform(0, 1, size = inf_prob.shape)
-        print(f"infection result is {c < inf_prob }")
+        #print(f"infection result is {c < inf_prob }")
         return c < inf_prob 
+
+    def _update_noise_infections(self, decision): 
+        a = np.ones_like(len(decision))
+        b = np.zeros(len(decision))
+        x = np.where((decision == True) & (self.infected == 0), a, b)
+        #print(f"variable x for update inf is {x} in step {self.current_step}")
+        y = np.array(x)
+        self.noise_inf = self.noise_inf + np.sum(y)
+        #print(f"decision is {decision}")
+        #print(f"variable for update infection is {y} with type {type(y)} in step {self.current_step}")
+        self.infected[np.where(y > 0)] = 1
+        self.history[np.where(y > 0)] = self.current_step
+
 
     def _update_infections(self, decision): 
         a = np.ones_like(len(decision))
@@ -91,15 +104,11 @@ class ContagionProcess:
         x = np.where((decision == True) & (self.infected == 0), a, b)
         #print(f"variable x for update inf is {x} in step {self.current_step}")
         y = np.array(x)
+        self.contagion_inf = self.contagion_inf + np.sum(y)
         #print(f"decision is {decision}")
         #print(f"variable for update infection is {y} with type {type(y)} in step {self.current_step}")
         self.infected[np.where(y > 0)] = 1
         self.history[np.where(y > 0)] = self.current_step
-        #for j in np.where(decision == 1)[0]:
-         #   print(f"decision in loop is {decision[j]}")
-          #  if self.infected[j] == 0:
-           #     self.infected[j] = decision[j]
-            #    self.history[j] = self.current_step     
         
 
     def _unvectorized_get_dose_sum(self, sum_inf_neighbors):
@@ -124,7 +133,7 @@ class ContagionProcess:
 
     def noise_process(self, A, noise_level):
         c = np.random.uniform(0, 1, size = len(A))
-        print(f"non zero elements in noise decision are {np.count_nonzero(c < noise_level)}")
+        #print(f"non zero elements in noise decision are {np.count_nonzero(c < noise_level)}")
         return c < noise_level 
 
 
