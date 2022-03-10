@@ -51,7 +51,10 @@ class ContagionProcess:
             pass
         elif self.method == "generalized_cont":            
             rand_neighbor = np.squeeze(np.array((self.normalized_network.cumsum(1) > np.random.rand(self.normalized_network.shape[0])[:,None]).argmax(1).T))
+            print(f"rand_neighbor is {rand_neighbor}")
+            print(self.infected)
             self.dose = self.infected[rand_neighbor]*self.dose_level 
+            print(f"dose is {self.dose}")
             #self.dose = self._get_rand_neighbor_weight(rand_neighbor)*self.infected[rand_neighbor]*self.dose_level 
             #print(f"dose in step {self.current_step} is {self.dose} with dimension {self.dose.ndim}")
             self.memory = self.memory + self.dose 
@@ -59,6 +62,7 @@ class ContagionProcess:
             if len(self.memory_storage) > self.memory_length:
                 self.memory = self.memory - self.memory_storage[0]
                 self.memory_storage.pop(0)
+            self.decision = self.method_params['dose_threshold'] <  self.memory
         else:
             print("not a valid contagion method")
         self._update_infections(self.decision)
