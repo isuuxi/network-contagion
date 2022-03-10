@@ -12,7 +12,7 @@ import json
 import pandas as pd
 from parameters import max_dose_threshold
 
-def run_model(t, n, p, noise_level, dose_level, experiment):
+def run_model(t, n, p, noise_level, dose_level, experiment, empirical_network):
     '''
     Wrapper for time_step to execute t time steps of the infection process
         Parameters:
@@ -25,27 +25,23 @@ def run_model(t, n, p, noise_level, dose_level, experiment):
             time_series: time series of the number of infected nodes in all time steps
             history: time step of infection for each node
     '''
+    print("starting model")
     start_time = time.time()
     method = "generalized_cont"
     memory_length = 1000
-    G, unweighted = initialization.create_network(n, p)
+    G, unweighted = initialization.create_network(n, p, empirical_network)
     network_adj, normalized_network, infected, infprob_indiv_nodes, dose_threshold, nodes_neighbors = initialization.init_network(G)
     time_series = np.zeros(t) 
     process = model.ContagionProcess(network_adj, unweighted, method, infected, nodes_neighbors, normalized_network, method_params = {'infprob_indiv': infprob_indiv_nodes, 'dose_threshold': dose_threshold}, noise_level = noise_level, dose_level = dose_level, memory_length = memory_length)
     for t in range(t):
         process.step()
         time_series[t] = np.sum(process.infected)
-
     runtime = (time.time() - start_time)
     noise_inf = process.noise_inf
     history = process.history
     contagion_inf = process.contagion_inf
     print(f"--- contagion method is {process.method} ---")
     print(f"--- runtime is {runtime:.4f} seconds ---")
-    #print(f"Normalized network is {normalized_network}")
-    #print(f"infected node is {infected}")
-    #print(f"Dose threshold is {dose_threshold} with dimension {dose_threshold.ndim}")
-    #return time_series, process.history, runtime, network_adj, unweighted, noise_inf, contagion_inf
 
     parameters = [t, n, p, noise_level]
     #print(parameters)
@@ -62,7 +58,6 @@ def run_model(t, n, p, noise_level, dose_level, experiment):
     #print(f"infection time series is {results_dict}")
     #header = ['Parameters', 'Time_series', 'Node_history', 'runtime in seconds']
     #data = [parameters, time_series, history, runtime]
-
 
     results_df = pd.DataFrame(history, columns = ['timestep'])
     d = {'nodes': [n], 'contagion_inf': [contagion_inf], 'noise_inf': [noise_inf]}
@@ -108,7 +103,7 @@ def run_model(t, n, p, noise_level, dose_level, experiment):
         output_file = os.path.join(export_path, f'network_{method}_t{t}_n{n}_p{p}_threshold{max_dose_threshold}_dose{dose_level}_noise{noise_level}_experiment{experiment}.csv')
         df_network.to_csv(output_file,index=False)
     #infections
-        output_file = os.path.join(export_path, f'anaresults_{method}_t{t}_n{n}_p{p}_threshold{max_dose_threshold}_dose{dose_level}_noise{noise_level}_experiment{experiment}.csv')
+        output_file = os.path.join(export_path, f'spreading_{method}_t{t}_n{n}_p{p}_threshold{max_dose_threshold}_dose{dose_level}_noise{noise_level}_experiment{experiment}.csv')
         results_df.to_csv(output_file,index=False)
     #infection_data
         output_file = os.path.join(export_path, f'infectiondata_{method}_t{t}_n{n}_p{p}_threshold{max_dose_threshold}_dose{dose_level}_noise{noise_level}_experiment{experiment}.csv')
@@ -118,7 +113,7 @@ def run_model(t, n, p, noise_level, dose_level, experiment):
         output_file = os.path.join(export_path, f'network_{method}_t{t}_n{n}_p{p}_infprobindiv{max_infprob_indiv}_noise{noise_level}.csv')
         df_network.to_csv(output_file,index=False)
     #infections
-        output_file = os.path.join(export_path, f'anaresults_{method}_t{t}_n{n}_p{p}_infprobindiv{max_infprob_indiv}_noise{noise_level}.csv')
+        output_file = os.path.join(export_path, f'spreading_{method}_t{t}_n{n}_p{p}_infprobindiv{max_infprob_indiv}_noise{noise_level}.csv')
         results_df.to_csv(output_file,index=False)    
     #infection_data
         output_file = os.path.join(export_path, f'infectiondata_{method}_t{t}_n{n}_p{p}_infprobindiv{max_infprob_indiv}_noise{noise_level}.csv')

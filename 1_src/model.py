@@ -4,10 +4,11 @@ from sklearn.preprocessing import normalize
 
 class ContagionProcess:
     def __init__(self, A, unweighted, method, infected, nodes_neighbors, normalized_network, method_params, noise_level, dose_level, memory_length):
-        if np.sum(np.all(A == 0, axis = 1)) == 0:
-            self.A = A
-        else:
-            print("Adjacency matrix contains rows with no entries")
+        #if np.sum(np.all(A == 0, axis = 1)) == 0:
+        #    self.A = A
+        #else:
+        #    print("Adjacency matrix contains rows with no entries")
+        self.A = A
         self.unweighted = unweighted
         self.method = method
         self.method_params = method_params
@@ -42,7 +43,6 @@ class ContagionProcess:
             self._update_noise_infections(self.noise_process(self.A, self.noise_level)) #+self.current_step/100000))
         if self.method == "SI_cont":
             sum_inf_neighbors = self._get_sum_inf_neighbors(self.unweighted, self.infected)
-            #print(f"sum of infected neighbors in step{self.current_step} is {sum_inf_neighbors}")
             self.inf_prob = 1 - np.power((1-self.method_params['infprob_indiv']), sum_inf_neighbors) 
             self.decision = self._mc_result(self.inf_prob)
         elif self.method == "threshold_cont":
@@ -51,21 +51,14 @@ class ContagionProcess:
             pass
         elif self.method == "generalized_cont":            
             rand_neighbor = np.squeeze(np.array((self.normalized_network.cumsum(1) > np.random.rand(self.normalized_network.shape[0])[:,None]).argmax(1).T))
-            #print(f"rand_neighbor in step {self.current_step} is {rand_neighbor} with dimension {rand_neighbor.ndim}")
             self.dose = self.infected[rand_neighbor]*self.dose_level 
             #self.dose = self._get_rand_neighbor_weight(rand_neighbor)*self.infected[rand_neighbor]*self.dose_level 
             #print(f"dose in step {self.current_step} is {self.dose} with dimension {self.dose.ndim}")
             self.memory = self.memory + self.dose 
             self.memory_storage.append(self.dose)
-            #print(f"memory in step {self.current_step} is {self.memory}")
-            #print(f"dose threshold is {self.method_params['dose_threshold']}")
             if len(self.memory_storage) > self.memory_length:
                 self.memory = self.memory - self.memory_storage[0]
                 self.memory_storage.pop(0)
-            #self.decision = 0.5 <  self.memory 
-            self.decision = self.method_params['dose_threshold'] <  self.memory 
-            #print(f"decision is {self.decision} in step {self.current_step}")
-            #print(f"infected is {self.infected} in step {self.current_step}")
         else:
             print("not a valid contagion method")
         self._update_infections(self.decision)

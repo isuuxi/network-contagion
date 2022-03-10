@@ -1,11 +1,16 @@
+from asyncio.windows_events import NULL
 import networkx as nx
 import random
 import numpy as np
 from sklearn.preprocessing import normalize
+import pandas as pd
+import os
+from pathlib import Path
+
 
 from parameters import max_dose_threshold, max_infprob_indiv
 
-def create_network(n, p):
+def create_network(n, p, empirical_network):
     '''
     Creates a network with the networkx package
         Parameters: 
@@ -15,16 +20,29 @@ def create_network(n, p):
         Returns:
             A: nx.graph class that represents a network
     '''
-    A = nx.generators.erdos_renyi_graph(n, p) 
-    unweighted = nx.to_numpy_matrix(A)
-    for (u, v) in A.edges():
-        A.edges[u,v]['weight'] = random.random()
-    network_adj = nx.to_numpy_matrix(A)
-    while  np.sum(np.all(network_adj == 0, axis = 1)) > 0:
+    cwd = os.getcwd()
+    current_path = Path.cwd()
+    if empirical_network == True:
+        blub = pd.read_hdf(os.path.join(
+                    current_path.parent,
+                    "4_network", 
+                    "flightroute_proximity_network_depth2.hdf"
+                    )
+                )
+        network_adj = np.asmatrix(pd.DataFrame(blub).to_numpy())
+        unweighted = NULL
+        print(network_adj, type(network_adj))
+    else: 
         A = nx.generators.erdos_renyi_graph(n, p) 
+        unweighted = nx.to_numpy_matrix(A)
         for (u, v) in A.edges():
             A.edges[u,v]['weight'] = random.random()
         network_adj = nx.to_numpy_matrix(A)
+        while  np.sum(np.all(network_adj == 0, axis = 1)) > 0:
+            A = nx.generators.erdos_renyi_graph(n, p) 
+            for (u, v) in A.edges():
+                A.edges[u,v]['weight'] = random.random()
+            network_adj = nx.to_numpy_matrix(A)
     return network_adj, unweighted
     
 def init_network(network_adj):

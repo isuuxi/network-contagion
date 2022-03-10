@@ -2,8 +2,11 @@
 ### Parameters
 ###############################################################################
 
+
+
+
 #time steps
-t = 200
+t = 500
 
 #network size
 n = 1000
@@ -12,17 +15,22 @@ n = 1000
 p = 0.02
 
 #noise level
-noise_level = 0.001
+noise_level = 0.0001
 
 #maximum dose threshold
-max_dose_threshold = 0.5
+max_dose_threshold = 1.6
 
 #infection type
 #possible values: "SI_cont", "generalized_cont"
-method = "SI_cont"
+method = "generalized_cont"
 
 #dose_level
-dose_level = 0.5
+dose_level = 0.01
 
 #maximum infprob_indiv
 max_infprob_indiv = 0.02
+
+#length of memory
+memory_length = 1000
+
+#noise_increase
