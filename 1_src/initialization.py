@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 
 
-from parameters import max_dose_threshold, max_infprob_indiv
+from parameters import max_dose_threshold
 
 def create_network(n, p, empirical_network):
     '''
@@ -31,10 +31,11 @@ def create_network(n, p, empirical_network):
                 )
         network_adj = np.asmatrix(pd.DataFrame(blub).to_numpy())
         unweighted = NULL
-        print(network_adj, type(network_adj))
+        #print(network_adj, type(network_adj))
     else: 
         A = nx.generators.erdos_renyi_graph(n, p) 
         unweighted = nx.to_numpy_matrix(A)
+        #print(f"unweighted init is {unweighted}")
         for (u, v) in A.edges():
             A.edges[u,v]['weight'] = random.random()
         network_adj = nx.to_numpy_matrix(A)
@@ -45,7 +46,7 @@ def create_network(n, p, empirical_network):
             network_adj = nx.to_numpy_matrix(A)
     return network_adj, unweighted
     
-def init_network(network_adj):
+def init_network(network_adj, max_infprob_indiv):
     '''
     Constructs the attributes of the network 
         Parameter:
@@ -57,13 +58,13 @@ def init_network(network_adj):
             infprob_indiv_nodes (list): infection probabilities of all nodes in network A
     '''
     size = len(network_adj)
-    #print(f"length of A is {size}")
     normalized_network = get_normalized_weights(network_adj) 
-    #connected_normalized_nodes =  normalized_network[~np.all(normalized_network == 0, axis=1)]
     infected = np.zeros(size)
     first_infection = random.randint(0, size-1)
     infected[first_infection] = True
-    infprob_indiv_nodes = get_infprob_indiv(network_adj)
+    infprob_indiv_nodes = max_infprob_indiv
+    #print(f"infprob_indiv in method is {infprob_indiv_nodes}")
+    #infprob_indiv_nodes = get_infprob_indiv(network_adj, max_infprob_indiv)
     dose_threshold = get_dose_threshold(network_adj)
     nodes_neighbors = [None]*len(network_adj)
     #for i in range(len(network_adj)):
@@ -97,7 +98,7 @@ def get_dose_threshold(A):
     dose_threshold = np.random.uniform(0, max_dose_threshold, len(A))
     return dose_threshold
 
-def get_infprob_indiv(A):
+def get_infprob_indiv(A, max_infprob_indiv):
     '''
     returns the individual infection probability of each node
        Parameters: 
@@ -106,5 +107,5 @@ def get_infprob_indiv(A):
            infprob_indiv: numpy array with randomly chosen infection probabilities of nodes
     '''
     infprob_indiv = np.random.uniform(0, max_infprob_indiv, len(A))
-    #print(f"infprob_indiv in method is {infprob_indiv}")
+    print(f"infprob_indiv in method is {infprob_indiv}")
     return infprob_indiv

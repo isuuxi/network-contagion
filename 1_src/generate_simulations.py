@@ -10,31 +10,49 @@ from parameters import max_dose_threshold, method
 #size ? 500, 1000, 1500
 
 #doses = np.arange(0.1, 1, 0.2)
-dosesshort = [0.001, 0.1, 0.5, 1]
-noises = [0]
+dosesshort = [ 0.1]
+noises = [0.0001]
 times = [500]
-sizes = [500]
-experiments = 10
-p = 0.01
-empirical_network = False
+sizes = [200]
+experiments = 1
+p = 0.1
+empirical_network = True
+max_infprob_indivs = [0.01]
 current_path = Path.cwd()
 mypath = os.path.join(current_path.parent)
-print(f"current path parent is {current_path.parent}")
-print(f"current path  is {mypath}")
 
-#assert os.path.isfile(path)
-#with open(path, "r") as f:
-#    pass
-
-for size in sizes:
-    for time_entry in times:
-        for noise in noises:
-            for dose in dosesshort:
-                for experiment in range(experiments):
-                    print(f"running for {size, time_entry, noise, dose, experiment}")
-                    run_model(time_entry, size, p, noise, dose, experiment, empirical_network)
-                    with open(r"C:\Users\isivf\Desktop\Masterarbeit\repos\network-contagion\identifiers.txt", "a") as f:
-                        f.write(f"network_{method}_t{time_entry}_n{size}_p{p}_threshold{max_dose_threshold}_dose{dose}_noise{noise}_experiment{experiments}-config_cluster.py" + "\n")
+if method == "Generalized_cont":
+    max_infprob_indivs = [0]
+    for size in sizes:
+        for time_entry in times:
+            for noise in noises:
+                for dose in dosesshort:
+                    for infprobindiv in max_infprob_indivs:
+                        for experiment in range(experiments):
+                            print(f"running for {size, time_entry, noise, dose, experiment}")
+                            run_model(time_entry, size, p, noise, dose, experiment, empirical_network, infprobindiv)
+                            with open(r"C:\Users\isivf\Desktop\Masterarbeit\repos\network-contagion\identifiers.txt", "a") as f:
+                                if empirical_network:
+                                    f.write(f"{method}_t{time_entry}_empricalnetwork_threshold{max_dose_threshold}_dose{dose}_noise{noise}_experiment{experiment}!config_cluster.py" + "\n")
+                                else:
+                                    f.write(f"{method}_t{time_entry}_n{size}_p{p}_threshold{max_dose_threshold}_dose{dose}_noise{noise}_experiment{experiment}!config_cluster.py" + "\n")
+elif method == "SI_cont":
+     doses = [0]
+     for size in sizes:
+        for time_entry in times:
+            for noise in noises:
+                for dose in doses:
+                    for infprobindiv in max_infprob_indivs:
+                        for experiment in range(experiments):
+                            print(f"running for {size, time_entry, noise, dose, experiment, infprobindiv}")
+                            run_model(time_entry, size, p, noise, dose, experiment, empirical_network, infprobindiv)
+                            with open(r"C:\Users\isivf\Desktop\Masterarbeit\repos\network-contagion\identifiers.txt", "a") as f:
+                                if empirical_network:
+                                    f.write(f"{method}_t{time_entry}_empricalnetwork_noise{noise}_experiment{experiment}_infprobindiv{infprobindiv}!config_cluster.py" + "\n")
+                                else:
+                                    f.write(f"{method}_t{time_entry}_n{size}_p{p}_noise{noise}_experiment{experiment}_infprobindiv{infprobindiv}!config_cluster.py" + "\n")
+else: 
+    print("Not a valid contagion method")
 
 
                     #file1 = open("C:\Users\isivf\Desktop\Masterarbeit\repos\network-contagion\identifiers.txt", "a") #append mode

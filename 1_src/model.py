@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.preprocessing import normalize
 
 class ContagionProcess:
-    def __init__(self, A, unweighted, method, infected, nodes_neighbors, normalized_network, method_params, noise_level, dose_level, memory_length):
+    def __init__(self, A, unweighted, method, infected, nodes_neighbors, A_norm, method_params, noise_level, dose_level, memory_length):
         #if np.sum(np.all(A == 0, axis = 1)) == 0:
         #    self.A = A
         #else:
@@ -13,10 +13,10 @@ class ContagionProcess:
         self.method = method
         self.method_params = method_params
         self.dose_level = dose_level
-        self.inf_prob = np.zeros(len(A))
+        #self.inf_prob = np.zeros(len(A))
         self.infected = infected
         self.nodes_neighbors = nodes_neighbors
-        self.normalized_network = normalized_network
+        self.A_norm = A_norm
         self.noise_level = noise_level
         #print(f"noise_level is {self.noise_level}")
         self.history = np.empty(len(self.infected))
@@ -34,6 +34,8 @@ class ContagionProcess:
         self.noise_inf = 0
         self.contagion_inf = 0
 
+        
+
 
     def step(self):
         '''
@@ -42,19 +44,28 @@ class ContagionProcess:
         if self.noise_level > 0:
             self._update_noise_infections(self.noise_process(self.A, self.noise_level)) #+self.current_step/100000))
         if self.method == "SI_cont":
-            sum_inf_neighbors = self._get_sum_inf_neighbors(self.unweighted, self.infected)
-            self.inf_prob = 1 - np.power((1-self.method_params['infprob_indiv']), sum_inf_neighbors) 
-            self.decision = self._mc_result(self.inf_prob)
+            '''''
+            for x in self.infected:
+                if x == 0:
+                    np.apply_along_axis(_si_inf(), 1, self.A)
+                    for y in self.A[:,]:
+                        infprob = self.A[x, y]*self.infected[y]*self.method_params['infprob_indiv']
+                        if random.random() < infprob:
+                            self.decision = True
+                        break
+            '''
+            self.infprob = self._get_infprob(self.A_norm, self.infected)
+            print(f"infprob after running _get_infprob method is {self.infprob}")
+            #sum_inf_neighbors = self._get_sum_inf_neighbors(self.unweighted, self.infected)
+            #self.inf_prob = 1 - np.power((1-self.method_params['infprob_indiv']), sum_inf_neighbors) 
+            self.decision = self._mc_result(self.infprob)
         elif self.method == "threshold_cont":
             pass
         elif self.method == "fractional_cont":
             pass
         elif self.method == "generalized_cont":            
-            rand_neighbor = np.squeeze(np.array((self.normalized_network.cumsum(1) > np.random.rand(self.normalized_network.shape[0])[:,None]).argmax(1).T))
-            print(f"rand_neighbor is {rand_neighbor}")
-            print(self.infected)
+            rand_neighbor = np.squeeze(np.array((self.A_norm.cumsum(1) > np.random.rand(self.A_norm.shape[0])[:,None]).argmax(1).T))
             self.dose = self.infected[rand_neighbor]*self.dose_level 
-            print(f"dose is {self.dose}")
             #self.dose = self._get_rand_neighbor_weight(rand_neighbor)*self.infected[rand_neighbor]*self.dose_level 
             #print(f"dose in step {self.current_step} is {self.dose} with dimension {self.dose.ndim}")
             self.memory = self.memory + self.dose 
@@ -68,6 +79,24 @@ class ContagionProcess:
         self._update_infections(self.decision)
         self.current_step += 1
         return None
+
+    '''''
+    def _si_inf(self):
+        infprob = self.A[x, y]*self.infected[y]*self.method_params['infprob_indiv']
+        if random.random() < infprob:
+            self.decision = True
+        return self.decision
+    '''
+
+    def _get_infprob(self, A_norm, infected):
+        #print(f"A is {A_norm}")
+        A_infected = np.multiply(A_norm, infected[np.newaxis, :])
+        #print(f"sum over A_infected is {np.sum(A_infected)}")
+        #print(f"A has shape {A_norm.shape} and infected has shape {infected.shape} and A_infected has shape {A_infected.shape} and is {A_infected}")
+        P = 1 - A_infected*self.method_params['infprob_indiv']
+        #print(f"P is {P}")
+        infprob = 1 - np.prod(P, axis = 1)
+        return infprob
 
     def _get_sum_inf_neighbors(self, A_unweighted, infected):  
         sum_inf_neighbors = np.dot(A_unweighted, infected)   
@@ -121,9 +150,9 @@ class ContagionProcess:
     '''
     
     def _get_rand_neighbor_weight(self, rand_neighbor):
-        rand_neighbor_weight = np.zeros(len(self.normalized_network))
-        for i in range(len(self.normalized_network)):
-            rand_neighbor_weight[i] = self.normalized_network[i, rand_neighbor[i]]
+        rand_neighbor_weight = np.zeros(len(self.A_norm))
+        for i in range(len(self.A_norm)):
+            rand_neighbor_weight[i] = self.A_norm[i, rand_neighbor[i]]
             #N[5, rand_neighbor[5]]
         return rand_neighbor_weight
 
