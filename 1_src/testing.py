@@ -4,8 +4,6 @@ import numpy as np
 import networkx as nx
 import model
 import time 
-import csv
-import math
 import os
 from pathlib import Path
 import json
@@ -27,9 +25,9 @@ def run_model(t, n, p, noise_level):
     '''
     start_time = time.time()
     G, unweighted = initialization.create_network(n, p)
-    network_adj, normalized_network, infected, infprob_indiv_nodes, dose_threshold, nodes_neighbors = initialization.init_network(G)
+    A, A_norm, infected, infprob_indiv_nodes, dose_threshold, nodes_neighbors = initialization.init_network(G)
     time_series = np.zeros(t) 
-    process = model.ContagionProcess(network_adj, unweighted, method, infected, nodes_neighbors, normalized_network, method_params = {'infprob_indiv': infprob_indiv_nodes, 'dose_threshold': dose_threshold}, noise_level = noise_level, dose_level = dose_level, memory_length = memory_length)
+    process = model.ContagionProcess(A, unweighted, method, infected, nodes_neighbors, A_norm, method_params = {'infprob_indiv': infprob_indiv_nodes, 'dose_threshold': dose_threshold}, noise_level = noise_level, dose_level = dose_level, memory_length = memory_length)
     for t in range(t):
         process.step()
         time_series[t] = np.sum(process.infected)
@@ -38,14 +36,11 @@ def run_model(t, n, p, noise_level):
     contagion_inf = process.contagion_inf
     print(f"--- contagion method is {process.method} ---")
     print(f"--- runtime is {runtime:.4f} seconds ---")
-    #print(f"Normalized network is {normalized_network}")
-    #print(f"infected node is {infected}")
-    #print(f"Dose threshold is {dose_threshold} with dimension {dose_threshold.ndim}")
-    return time_series, process.history, runtime, network_adj, unweighted, noise_inf, contagion_inf
+    return time_series, process.history, runtime, A, unweighted, noise_inf, contagion_inf
 
 parameters = [t, n, p, noise_level]
 #print(parameters)
-time_series, history, runtime, network_adj, unweighted, noise_inf, contagion_inf = run_model(parameters[0], parameters[1], parameters[2], parameters[3])
+time_series, history, runtime, A, unweighted, noise_inf, contagion_inf = run_model(parameters[0], parameters[1], parameters[2], parameters[3])
 divisor = 10
 print(f"noise infections are {noise_inf} and contagion infections are {contagion_inf} while total infections are {time_series[t-1]}")
 #print(f"history was {history}")
@@ -99,7 +94,7 @@ elif method == "SI_cont":
 
 ## Export data for validation ##
 #network
-df_network = pd.DataFrame(network_adj)
+df_network = pd.DataFrame(A)
 if method == "generalized_cont":
     output_file = os.path.join(export_path, f'network_{method}_t{t}_n{n}_p{p}_threshold{max_dose_threshold}_dose{dose_level}_noise{noise_level}.csv')
     df_network.to_csv(output_file,index=False)

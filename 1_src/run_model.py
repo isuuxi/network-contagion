@@ -4,8 +4,6 @@ import numpy as np
 import networkx as nx
 import model
 import time 
-import csv
-import math
 import os
 from pathlib import Path
 import json
@@ -13,7 +11,7 @@ import pandas as pd
 from parameters import max_dose_threshold
 from parameters import method
 
-def run_model(t, n, p, noise_level, dose_level, experiment, empirical_network, max_infprob_indiv):
+def run_model(t, n, p, noise_level, dose_level, experiment, empirical_network, max_infprob_indiv, infected):
     '''
     Wrapper for time_step to execute t time steps of the infection process
         Parameters:
@@ -27,13 +25,13 @@ def run_model(t, n, p, noise_level, dose_level, experiment, empirical_network, m
             history: time step of infection for each node
     '''
     print("starting model")
-    
+    initial_infected = np.sum(infected)
     start_time = time.time()
     memory_length = 1000
-    G, unweighted = initialization.create_network(n, p, empirical_network)
-    network_adj, normalized_network, infected, infprob_indiv_nodes, dose_threshold, nodes_neighbors,  = initialization.init_network(G, max_infprob_indiv)
+    G = initialization.create_network(n, p, empirical_network)
+    network_adj, normalized_network, infected, infprob_indiv_nodes, dose_threshold, nodes_neighbors,  = initialization.init_network(G, max_infprob_indiv, infected)
     time_series = np.zeros(t) 
-    process = model.ContagionProcess(network_adj, unweighted, method, infected, nodes_neighbors, normalized_network, method_params = {'infprob_indiv': max_infprob_indiv, 'dose_threshold': dose_threshold}, noise_level = noise_level, dose_level = dose_level, memory_length = memory_length)
+    process = model.ContagionProcess(network_adj, method, infected, nodes_neighbors, normalized_network, method_params = {'infprob_indiv': max_infprob_indiv, 'dose_threshold': dose_threshold}, noise_level = noise_level, dose_level = dose_level, memory_length = memory_length)
     for i in range(t):
         process.step()
         time_series[i] = np.sum(process.infected)
@@ -41,6 +39,7 @@ def run_model(t, n, p, noise_level, dose_level, experiment, empirical_network, m
     noise_inf = process.noise_inf
     history = process.history
     contagion_inf = process.contagion_inf
+    infected = process.infected
     print(f"--- contagion method is {process.method} ---")
     print(f"--- runtime is {runtime:.4f} seconds ---")
     print(f"time is {t}")
@@ -48,9 +47,9 @@ def run_model(t, n, p, noise_level, dose_level, experiment, empirical_network, m
     divisor = 10
     history = np.floor(history/divisor)
     results_dict = {"Infection time series": time_series.tolist(), "Infection node history": history.tolist(), "Runtime": runtime}
-    print(f"noise infections are {noise_inf} and contagion infections are {contagion_inf} while total infections are {time_series[t-1]}")
+    print(f"noise infections are {noise_inf} and contagion infections are {contagion_inf} and inital inf are {initial_infected} while total infections are {time_series[t-1]}. Time series is {time_series}")
     results_df = pd.DataFrame(history, columns = ['timestep'])
-    d = {'nodes': [n], 'contagion_inf': [contagion_inf], 'noise_inf': [noise_inf]}
+    d = {'nodes': [n], 'contagion_inf': [contagion_inf], 'noise_inf': [noise_inf], "initial_inf": [initial_infected]}
     infection_data = pd.DataFrame(data = d)
     print(infection_data)
     ## Export ##
@@ -83,6 +82,16 @@ def run_model(t, n, p, noise_level, dose_level, experiment, empirical_network, m
                     f'results_{method}_t{t}_n{n}_p{p}_infprobindiv{max_infprob_indiv}_noise{noise_level}_experiment{experiment}.json'
                 ), 'w') as json_file: 
                 json.dump(results_dict, json_file)  
+    
+    infected = pd.DataFrame(infected)
+    ## export the process.infected file ##
+    if method == "generalized_cont":
+        output_file = os.path.join(export_path, f'infected_{method}_t{t}_n{n}_p{p}_threshold{max_dose_threshold}_dose{dose_level}_noise{noise_level}_experiment{experiment}.csv')
+        infected.to_csv(output_file,index=False)
+    elif method == "SI_cont": 
+        output_file = os.path.join(export_path, f'infected__{method}_t{t}_n{n}_p{p}_infprobindiv{max_infprob_indiv}_noise{noise_level}.csv')
+        infected.to_csv(output_file,index=False)
+    
 
     ## Export data for validation ##
     #network
