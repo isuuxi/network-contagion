@@ -20,7 +20,7 @@ class ContagionProcess:
         self.current_step = 0
         self.memory = np.zeros(len(self.infected))
         self.memory_length = memory_length
-        self.memory_storage = np.zeros(memory_length) 
+        self.memory_storage = []
         self.dose = np.empty(len(self.infected))
         self.decision = np.zeros(len(self.A))
         self._get_dose_sum = np.vectorize(self._unvectorized_get_dose_sum)
