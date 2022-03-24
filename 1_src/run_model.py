@@ -55,18 +55,21 @@ def run_model(method, t, n, p, k, beta, m, noise_level, dose_level, experiment, 
     d = {'nodes': [n], 'contagion_inf': [contagion_inf], 'noise_inf': [noise_inf], "initial_inf": [initial_infected]}
     infection_data = pd.DataFrame(data = d)
     print(infection_data)
+
     ## Export ##
     cwd = os.getcwd()
     current_path = Path.cwd()
     if method == "generalized_cont":
-        current_run = f'data/{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_threshold{max_dose_threshold}_dose{dose_level}_noise{noise_level}_experiment{experiment}'
+        current_run = f'data_erdos/{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_threshold{max_dose_threshold}_dose{dose_level}_noise{noise_level}_initialinf{initial_infected}_experiment{experiment}'
     elif method == "SI_cont":
-        current_run = f'data/{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_infprobindiv{max_infprob_indiv}_noise{noise_level}'
+        current_run = f'data_erdos/{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_infprobindiv{max_infprob_indiv}_noise{noise_level}_initialinf{initial_infected}_experiment{experiment}'
 
     # path for export
     export_path = os.path.join(current_path.parent, current_run)
     if not os.path.exists(export_path):
             os.makedirs(export_path)
+    if not os.path.exists(os.path.join(current_path.parent,"2_results")):
+        os.makedirs(os.path.join(current_path.parent,"2_results"))
 
     #export infection data for plotting
     if method == "generalized_cont":
@@ -74,7 +77,7 @@ def run_model(method, t, n, p, k, beta, m, noise_level, dose_level, experiment, 
                 os.path.join(
                     current_path.parent,
                     "2_results", 
-                    f'results_{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_threshold{max_dose_threshold}_dose{dose_level}_noise{noise_level}_experiment{experiment}.json'
+                    f'results_{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_threshold{max_dose_threshold}_dose{dose_level}_noise{noise_level}_initialinf{initial_infected}_experiment{experiment}.json'
                 ), 'w') as json_file: 
                 json.dump(results_dict, json_file)
     elif method == "SI_cont":
@@ -82,39 +85,39 @@ def run_model(method, t, n, p, k, beta, m, noise_level, dose_level, experiment, 
                 os.path.join(
                     current_path.parent,
                     "2_results", 
-                    f'results_{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_infprobindiv{max_infprob_indiv}_noise{noise_level}_experiment{experiment}.json'
+                    f'results_{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_infprobindiv{max_infprob_indiv}_noise{noise_level}_initialinf{initial_infected}_experiment{experiment}.json'
                 ), 'w') as json_file: 
                 json.dump(results_dict, json_file)  
     
     infected = pd.DataFrame(infected)
     ## export the process.infected file ##
     if method == "generalized_cont":
-        output_file = os.path.join(export_path, f'infected_{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_threshold{max_dose_threshold}_dose{dose_level}_noise{noise_level}_experiment{experiment}.csv')
+        output_file = os.path.join(export_path, f'infected_{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_threshold{max_dose_threshold}_dose{dose_level}_noise{noise_level}_initialinf{initial_infected}_experiment{experiment}.csv')
         infected.to_csv(output_file,index=False)
     elif method == "SI_cont": 
-        output_file = os.path.join(export_path, f'infected__{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_infprobindiv{max_infprob_indiv}_noise{noise_level}.csv')
+        output_file = os.path.join(export_path, f'infected_{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_infprobindiv{max_infprob_indiv}_noise{noise_level}_initialinf{initial_infected}_experiment{experiment}.csv')
         infected.to_csv(output_file,index=False)
     
     ## Export data for validation ##
     #network
     df_network = pd.DataFrame(A)
     if method == "generalized_cont":
-        output_file = os.path.join(export_path, f'network_{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_threshold{max_dose_threshold}_dose{dose_level}_noise{noise_level}_experiment{experiment}.csv')
+        output_file = os.path.join(export_path, f'network_{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_threshold{max_dose_threshold}_dose{dose_level}_noise{noise_level}_initialinf{initial_infected}_experiment{experiment}.csv')
         df_network.to_csv(output_file,index=False)
     #infections
-        output_file = os.path.join(export_path, f'spreading_{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_threshold{max_dose_threshold}_dose{dose_level}_noise{noise_level}_experiment{experiment}.csv')
+        output_file = os.path.join(export_path, f'spreading_{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_threshold{max_dose_threshold}_dose{dose_level}_noise{noise_level}_initialinf{initial_infected}_experiment{experiment}.csv')
         results_df.to_csv(output_file,index=False)
     #infection_data
-        output_file = os.path.join(export_path, f'infectiondata_{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_threshold{max_dose_threshold}_dose{dose_level}_noise{noise_level}_experiment{experiment}.csv')
+        output_file = os.path.join(export_path, f'infectiondata_{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_threshold{max_dose_threshold}_dose{dose_level}_noise{noise_level}_initialinf{initial_infected}_experiment{experiment}.csv')
         infection_data.to_csv(output_file,index=False)
     elif method == "SI_cont": 
     #network
-        output_file = os.path.join(export_path, f'network_{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_infprobindiv{max_infprob_indiv}_noise{noise_level}.csv')
+        output_file = os.path.join(export_path, f'network_{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_infprobindiv{max_infprob_indiv}_noise{noise_level}_initialinf{initial_infected}_experiment{experiment}.csv')
         df_network.to_csv(output_file,index=False)
     #infections
-        output_file = os.path.join(export_path, f'spreading_{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_infprobindiv{max_infprob_indiv}_noise{noise_level}.csv')
+        output_file = os.path.join(export_path, f'spreading_{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_infprobindiv{max_infprob_indiv}_noise{noise_level}_initialinf{initial_infected}_experiment{experiment}.csv')
         results_df.to_csv(output_file,index=False)    
     #infection_data
-        output_file = os.path.join(export_path, f'infectiondata_{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_infprobindiv{max_infprob_indiv}_noise{noise_level}.csv')
+        output_file = os.path.join(export_path, f'infectiondata_{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_infprobindiv{max_infprob_indiv}_noise{noise_level}_initialinf{initial_infected}_experiment{experiment}.csv')
         infection_data.to_csv(output_file,index=False)
 
