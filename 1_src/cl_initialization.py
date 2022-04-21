@@ -1,4 +1,4 @@
-from asyncio.windows_events import NULL
+#from asyncio.windows_events import NULL
 import networkx as nx
 import random
 import numpy as np
@@ -23,10 +23,13 @@ def create_network(n, p, k, beta, m, network_type):
     cwd = os.getcwd()
     current_path = Path.cwd()
     if network_type == "empirical":
-        blub = pd.read_hdf("C:/Users/isivf/Desktop/Masterarbeit/repos/network-contagion/4_network/flightroute_proximity_network_depth2.hdf")
+        blub = pd.read_hdf("/p/tmp/isabellf/empirical_network/flightroute_proximity_network_depth2.hdf"
+                )
         A = np.asmatrix(pd.DataFrame(blub).to_numpy())
+        #unweighted = NULL
     elif network_type == "erdos":
             A = nx.generators.erdos_renyi_graph(n, p) 
+            #unweighted = nx.to_numpy_matrix(A)
             for (u, v) in A.edges():
                 A.edges[u,v]['weight'] = random.random()
             A = nx.to_numpy_matrix(A)
@@ -37,6 +40,7 @@ def create_network(n, p, k, beta, m, network_type):
                 A = nx.to_numpy_matrix(A)
     elif network_type == "barabasi":
         A = nx.generators.barabasi_albert_graph(n, m) 
+        #unweighted = nx.to_numpy_matrix(A)
         for (u, v) in A.edges():
             A.edges[u,v]['weight'] = random.uniform(0.2, 0.4)
         A = nx.to_numpy_matrix(A)
@@ -47,6 +51,7 @@ def create_network(n, p, k, beta, m, network_type):
             A = nx.to_numpy_matrix(A)
     elif network_type == "watts":
         A = nx.generators.watts_strogatz_graph(n, k, beta) 
+        #unweighted = nx.to_numpy_matrix(A)
         for (u, v) in A.edges():
             A.edges[u,v]['weight'] = random.uniform(0.2, 0.4)
         A = nx.to_numpy_matrix(A)

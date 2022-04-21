@@ -1,5 +1,5 @@
 from networkx.algorithms.shortest_paths import unweighted
-import initialization
+import cl_initialization
 import numpy as np
 import networkx as nx
 import model
@@ -27,8 +27,8 @@ def run_model(method, t, n, p, k, beta, m, noise_level, dose_level, experiment, 
     initial_infected = np.sum(initial_infected)
     start_time = time.time()
     memory_length = 1000
-    G = initialization.create_network(n, p, k, beta, m, network_type)
-    A, A_norm, infected, infprob_indiv_nodes, dose_threshold, nodes_neighbors,  = initialization.init_network(G, max_infprob_indiv, initial_infected)
+    G = cl_initialization.create_network(n, p, k, beta, m, network_type)
+    A, A_norm, infected, infprob_indiv_nodes, dose_threshold, nodes_neighbors,  = cl_initialization.init_network(G, max_infprob_indiv, initial_infected)
     time_series = np.zeros(t) 
     process = model.ContagionProcess(A, method, infected, nodes_neighbors, A_norm, method_params = {'infprob_indiv': max_infprob_indiv, 'dose_threshold': dose_threshold}, noise_level = noise_level, dose_level = dose_level, memory_length = memory_length)
     time_series[0] = initial_infected
@@ -47,7 +47,7 @@ def run_model(method, t, n, p, k, beta, m, noise_level, dose_level, experiment, 
     print(f"--- runtime is {runtime:.4f} seconds ---")
     print(f"time is {t}")
     #print(f"history is {history}")
-    divisor = 1
+    divisor = 10
     history = np.floor(history/divisor)
     results_dict = {"Infection time series": time_series.tolist(), "Infection node history": history.tolist(), "Runtime": runtime}
     #print(f"noise infections are {noise_inf} and contagion infections are {contagion_inf} and inital inf are {initial_infected} while total infections are {time_series[t-1]}. Time series is {time_series}")
@@ -55,27 +55,26 @@ def run_model(method, t, n, p, k, beta, m, noise_level, dose_level, experiment, 
     d = {'nodes': [n], 'contagion_inf': [contagion_inf], 'noise_inf': [noise_inf], "initial_inf": [initial_infected]}
     infection_data = pd.DataFrame(data = d)
     print(infection_data)
-
     ## Export ##
-    cwd = os.getcwd()
-    current_path = Path.cwd()
+    
+    current_path = "/p/tmp/isabellf/data_barabasi/"
     if method == "generalized_cont":
-        current_run = f'data_erdos_times10/{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_threshold{max_dose_threshold}_dose{dose_level}_noise{noise_level}_initialinf{initial_infected}_experiment{experiment}'
+        current_run = f'{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_threshold{max_dose_threshold}_dose{dose_level}_noise{noise_level}_initialinf{initial_infected}_experiment{experiment}'
     elif method == "SI_cont":
-        current_run = f'data_erdos/{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_infprobindiv{max_infprob_indiv}_noise{noise_level}_initialinf{initial_infected}_experiment{experiment}'
+        current_run = f'{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_infprobindiv{max_infprob_indiv}_noise{noise_level}_initialinf{initial_infected}_experiment{experiment}'
 
     # path for export
-    export_path = os.path.join(current_path.parent, "data/data_troubleshooting/", current_run)
+    export_path = os.path.join(current_path, current_run)
     if not os.path.exists(export_path):
             os.makedirs(export_path)
-    if not os.path.exists(os.path.join(current_path.parent,"2_results")):
-        os.makedirs(os.path.join(current_path.parent,"2_results"))
+    if not os.path.exists(os.path.join(current_path,"2_results")):
+        os.makedirs(os.path.join(current_path,"2_results"))
 
     #export infection data for plotting
     if method == "generalized_cont":
         with open(
                 os.path.join(
-                    current_path.parent,
+                    current_path,
                     "2_results", 
                     f'results_{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_threshold{max_dose_threshold}_dose{dose_level}_noise{noise_level}_initialinf{initial_infected}_experiment{experiment}.json'
                 ), 'w') as json_file: 
@@ -83,7 +82,7 @@ def run_model(method, t, n, p, k, beta, m, noise_level, dose_level, experiment, 
     elif method == "SI_cont":
         with open(
                 os.path.join(
-                    current_path.parent,
+                    current_path,
                     "2_results", 
                     f'results_{method}_t{t}_network{network_type}_n{n}_p{p}_beta{beta}_m{m}_infprobindiv{max_infprob_indiv}_noise{noise_level}_initialinf{initial_infected}_experiment{experiment}.json'
                 ), 'w') as json_file: 

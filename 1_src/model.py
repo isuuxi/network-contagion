@@ -36,10 +36,6 @@ class ContagionProcess:
         if self.method == "SI_cont":
             self.infprob = self._get_infprob(self.A_norm, self.infected)
             self.decision = self._mc_result(self.infprob)
-        elif self.method == "threshold_cont":
-            pass
-        elif self.method == "fractional_cont":
-            pass
         elif self.method == "generalized_cont":            
             rand_neighbor = np.squeeze(np.array((self.A_norm.cumsum(1) > np.random.rand(self.A_norm.shape[0])[:,None]).argmax(1).T))
             self.dose = self.infected[rand_neighbor]*self.dose_level 

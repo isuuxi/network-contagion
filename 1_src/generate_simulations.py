@@ -7,6 +7,7 @@ import json
 ###################################
 ###### set configuration grid #####
 ###################################
+'''''
 dosesshort = [ 0, 0.01, 0.1]
 noises = [0, 0.00001, 0.01]
 times = [100, 500]
@@ -24,6 +25,24 @@ initial_infecteds = [1, 20]
 #network_types = ["erdos", "barabasi", "watts"]
 network_types = ["erdos"]
 methods = ["SI_cont", "generalized_cont"]
+'''
+dosesshort = [ 0, 0.01]
+noises = [0, 0.001]
+times = [500]
+max_infprob_indivs = [0.1]
+#network parameters
+sizes = [1000]
+experiments = 5
+p = 0.1
+m_values = [2, 4]
+k = 25
+betas = [0.1, 0.3]
+read_infected = False
+initial_infecteds = [1]
+#network types: "empirical", "erdos", "barabasi", "watts"
+#network_types = ["erdos", "barabasi", "watts"]
+network_types = ["erdos"]
+methods = ["generalized_cont"]
 
 if read_infected == True:
     infected = pd.read_csv(filepath_or_buffer="C:/Users/isivf/Desktop/Masterarbeit/repos/network-contagion_5/SI_cont_t500_n200_p0.1_infprobindiv0.01_noise0.0001/infected_SI_cont_t500_n200_p0.1_threshold1.6_dose0_noise0.0001_experiment0.csv")
@@ -41,13 +60,12 @@ def match_string(text):
 
 
 
-
 #########################################
 ##### run with given configurations #####
 #########################################
 for method in methods: 
     if method == "generalized_cont":
-        max_infprob_indivs = 0
+        infprobindiv = 0
         for network_type in network_types:
             for initial_infected in initial_infecteds:
                 for time_entry in times:
@@ -79,7 +97,7 @@ for method in methods:
                                         if match_string(text) == False:
                                             print(f"running for {method, network_type, size, time_entry, noise, dose, experiment, infprobindiv}")
                                             run_model(method, time_entry, size, p, k, beta, m, noise, dose, experiment, network_type, infprobindiv, initial_infected)
-                                            with open(r"C:\Users\isivf\Desktop\Masterarbeit\repos\network-contagion/identifiers_erdos.txt", "a") as f:
+                                            with open(r"C:\Users\isivf\Desktop\Masterarbeit\repos\network-contagion/data/data_troubleshooting/identifiers_erdos.txt", "a") as f:
                                                 f.write(f"{method}_t{time_entry}_network{network_type}_n{size}_p{p}_beta{beta}_m{m}_threshold{max_dose_threshold}_dose{dose}_noise{noise}_initialinf{initial_infected}_experiment{experiment}!config_cluster.py"+ "\n")
                                         else:
                                             pass
