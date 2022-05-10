@@ -11,7 +11,7 @@ class ContagionProcess:
         self.method_params = method_params
         self.dose_level = dose_level
         self.infected = infected
-        self.nodes_neighbors = nodes_neighbors
+        #self.nodes_neighbors = nodes_neighbors
         self.A_norm = A_norm
         self.noise_level = noise_level
         self.history = np.zeros(len(infected))
@@ -23,7 +23,6 @@ class ContagionProcess:
         self.memory_storage = []
         self.dose = np.empty(len(self.infected))
         self.decision = np.zeros(len(self.A))
-        self._get_dose_sum = np.vectorize(self._unvectorized_get_dose_sum)
         self.noise_inf = 0
         self.contagion_inf = 0
 
@@ -32,7 +31,7 @@ class ContagionProcess:
         Executes one time step of a contagion process 
         '''
         if self.noise_level > 0:
-            self._update_noise_infections(self.noise_process(self.A, self.noise_level)) #+self.current_step/100000))
+            self._update_noise_infections(self.noise_process(self.A, self.noise_level)) 
         if self.method == "SI_cont":
             self.infprob = self._get_infprob(self.A_norm, self.infected)
             self.decision = self._mc_result(self.infprob)
@@ -87,43 +86,9 @@ class ContagionProcess:
         self.infected[np.where(y > 0)] = 1
         self.history[np.where(y > 0)] = self.current_step + 1
         
-    def _unvectorized_get_dose_sum(self, sum_inf_neighbors):
-        dose_vector = np.sum(np.random.uniform(0, 1, sum_inf_neighbors))
-        return dose_vector
 
     def noise_process(self, A, noise_level):
         c = np.random.uniform(0, 1, size = len(A))
         return c < noise_level 
 
-    '''''
-    def _get_rand_neighbor_weight(self, rand_neighbor):
-        rand_neighbor_weight = np.zeros(len(self.A_norm))
-        for i in range(len(self.A_norm)):
-            rand_neighbor_weight[i] = self.A_norm[i, rand_neighbor[i]]
-        return rand_neighbor_weight
-    
-    def _get_dose_strength(self, connected_network_nodes, x):
-        dose = np.zeros(len(connected_network_nodes))
-        for i in range(len(connected_network_nodes)):
-            dose[i] = connected_network_nodes[i,x[i]]
-        return dose
-    '''
-    
-''''
-def node_neighbors(A):
-    
-    #returns a 2D array (?!) with the neighbors of each node
-     #  Parameters: 
-      #     A: weighted adjacency matrix of a network
-       #Returns:
-        #   node_neighbors: neighbors of each node
-     
-    node_neighbors = np.zeros(len(A))
-    for i, j in enumerate(A):
-        node_neighbors[j] = np.where(A[j] > 1)[i]
-    return node_neighbors
-'''
-     
-
-
-
+   

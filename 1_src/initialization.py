@@ -6,7 +6,7 @@ from sklearn.preprocessing import normalize
 import pandas as pd
 import os
 from pathlib import Path
-from parameters import max_dose_threshold
+#from parameters import max_dose_threshold
 
 def create_network(n, p, k, beta, m, network_type):
     '''
@@ -59,7 +59,7 @@ def create_network(n, p, k, beta, m, network_type):
         print("not a valid network type")
     return A
     
-def init_network(A, max_infprob_indiv, initial_infected):
+def init_network(A, max_dose_threshold, max_infprob_indiv, initial_infected):
     '''
     Constructs the attributes of the network 
         Parameter:
@@ -72,25 +72,14 @@ def init_network(A, max_infprob_indiv, initial_infected):
     '''
     size = len(A)
     A_norm = get_normalized_weights(A) 
-    '''''
-    if isinstance(infected, str):
-        infected = np.zeros(size)
-        first_infection = random.randint(0, size-1)
-        infected[first_infection] = True
-    else:
-        infected = infected
-    '''
     infected = np.zeros(size)
     first_infections = random.sample(range(size), initial_infected)
     for i in first_infections:
         infected[i] = True
     infprob_indiv_nodes = max_infprob_indiv
-    dose_threshold = get_dose_threshold(A)
+    dose_threshold = max_dose_threshold
+    #dose_threshold = get_dose_threshold(A, max_dose_threshold)
     nodes_neighbors = [None]*len(A)
-    #for i in range(len(A)):
-        #print(np.nonzero(A[i]))    
-        #nodes_neighbors[i] = np.nonzero(A[i])[1]
-    #print(f"Dose threshold is {dose_threshold} with dimension {dose_threshold.ndim}")
     nodes_neighbors = 0
     return A, A_norm, infected, infprob_indiv_nodes, dose_threshold, nodes_neighbors
 
@@ -107,7 +96,7 @@ def get_normalized_weights(A):
     N = normalize(A, axis=1, norm='l1')
     return N
 
-def get_dose_threshold(A):
+def get_dose_threshold(A, max_dose_threshold):
     '''
     returns the individual infection threshold of doses received of each node
        Parameters: 
